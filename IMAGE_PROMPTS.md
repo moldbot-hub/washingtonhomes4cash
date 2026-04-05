@@ -19,24 +19,24 @@ Professional photograph of a modest suburban house with a SOLD sign in the yard,
 ## About Page Hero (1200x800 landscape)
 **Filename:** `images/hero-about.jpg`
 ```
-Professional headshot of a confident male real estate investor in his early 30s, wearing a clean navy button-down shirt, standing in front of a renovated craftsman-style home, warm natural lighting, friendly professional expression, Pacific Northwest residential setting with green trees. No text, no watermarks.
+Professional headshot of a confident male real estate investor in his early 30s, wearing a clean forest green button-down shirt, standing in front of a renovated craftsman-style home, warm natural lighting, friendly professional expression, Pacific Northwest residential setting with green trees. No text, no watermarks.
 ```
 
 ## How It Works Step Icons (400x400 each)
 
 **Filename:** `images/step-1.svg` (or .png)
 ```
-Clean minimalist illustration of a house with a location pin marker above it, flat design, navy blue (#1a2744) and gold (#d4a843) color palette on white background, modern vector style, centered. No text.
+Clean minimalist illustration of a house with a location pin marker above it, flat design, forest green (#1a5632) and warm orange (#e07a2f) color palette on white background, modern vector style, centered. No text.
 ```
 
 **Filename:** `images/step-2.svg` (or .png)
 ```
-Clean minimalist illustration of a clipboard with a checklist and a magnifying glass, flat design, navy blue (#1a2744) and gold (#d4a843) color palette on white background, modern vector style, centered. No text.
+Clean minimalist illustration of a clipboard with a checklist and a magnifying glass, flat design, forest green (#1a5632) and warm orange (#e07a2f) color palette on white background, modern vector style, centered. No text.
 ```
 
 **Filename:** `images/step-3.svg` (or .png)
 ```
-Clean minimalist illustration of a handshake with a dollar sign and house key, flat design, navy blue (#1a2744) and gold (#d4a843) color palette on white background, modern vector style, centered. No text.
+Clean minimalist illustration of a handshake with a dollar sign and house key, flat design, forest green (#1a5632) and warm orange (#e07a2f) color palette on white background, modern vector style, centered. No text.
 ```
 
 ## Trust/Credibility Section (1200x600 landscape)
@@ -71,22 +71,22 @@ Professional interior photograph of a kitchen needing major renovation, damaged 
 
 **Filename:** `images/situation-foreclosure.svg`
 ```
-Simple minimalist icon of a house with a warning triangle, flat design, navy blue on white, modern vector. No text.
+Simple minimalist icon of a house with a warning triangle, flat design, forest green on white, modern vector. No text.
 ```
 
 **Filename:** `images/situation-inherited.svg`
 ```
-Simple minimalist icon of a house with a scroll/document, flat design, navy blue on white, modern vector. No text.
+Simple minimalist icon of a house with a scroll/document, flat design, forest green on white, modern vector. No text.
 ```
 
 **Filename:** `images/situation-damage.svg`
 ```
-Simple minimalist icon of a house with water drops, flat design, navy blue on white, modern vector. No text.
+Simple minimalist icon of a house with water drops, flat design, forest green on white, modern vector. No text.
 ```
 
 **Filename:** `images/situation-repairs.svg`
 ```
-Simple minimalist icon of a house with a wrench, flat design, navy blue on white, modern vector. No text.
+Simple minimalist icon of a house with a wrench, flat design, forest green on white, modern vector. No text.
 ```
 
 ---
@@ -151,7 +151,7 @@ Professional photograph of an older craftsman-style home with established landsc
 
 **Filename:** `images/social/profile.jpg`
 ```
-Professional headshot of a confident male real estate investor in his early 30s, navy button-down shirt, warm smile, clean background with slight bokeh of a residential neighborhood, square crop, warm lighting. No text, no watermarks.
+Professional headshot of a confident male real estate investor in his early 30s, forest green button-down shirt, warm smile, clean background with slight bokeh of a residential neighborhood, square crop, warm lighting. No text, no watermarks.
 ```
 
 **Filename:** `images/social/cover.jpg` (1200x628)

@@ -4,7 +4,7 @@
 
 | Domain | Brand | Status |
 |--------|-------|--------|
-| washingtonhomes4cash.com | Personal (David) | DNS complete |
+| washingtonhomes4cash.com | State-wide company | DNS complete |
 | washingtonhomes4cash.com | State-wide company | DNS + Google Workspace complete |
 | washingtonhomeoffers.com | Professional/corporate | DNS complete |
 
@@ -17,7 +17,7 @@ Same process as nwgeneralcontractor.com.
 ### For each domain:
 1. Log in to Cloudflare dashboard → Pages
 2. Create new project → Connect to Git (or Direct Upload)
-3. Upload the site folder (e.g., `davidbuyshomes4cash/`)
+3. Upload the site folder (e.g., `washingtonhomes4cash/`)
 4. Set production branch / upload
 5. Go to Custom domains → Add domain
 6. Add `washingtonhomes4cash.com` and `www.washingtonhomes4cash.com`
@@ -26,7 +26,7 @@ Same process as nwgeneralcontractor.com.
 
 ### DNS (at Namecheap or wherever domains are registered):
 - Point nameservers to Cloudflare (if not already)
-- Or add CNAME record: `www` → `davidbuyshomes4cash.pages.dev`
+- Or add CNAME record: `www` → `washingtonhomes4cash.pages.dev`
 - And A record: `@` → Cloudflare Pages IP (shown in dashboard)
 
 ---
@@ -44,7 +44,7 @@ const CONFIG = {
   apiUrl: 'https://app.setmate.io/api/public/cash-offer',
   apiKey: '<same key as CASH_OFFER_API_KEY>',
   domain: 'washingtonhomes4cash.com',
-  phone: '(425) XXX-XXXX',  // David's actual number
+  phone: '(360) XXX-XXXX',  // Team's actual number
   googlePlacesApiKey: '<Google Places API key>',
 };
 ```
@@ -70,7 +70,7 @@ const CONFIG = {
 4. **Secondary categories:** Real Estate Agent, Home Builder
 5. **Business type:** Service area business (no physical storefront)
 6. **Service areas:** Seattle, Everett, Tacoma, Bellevue, Renton, Kent, Auburn, Federal Way, Lakewood, Olympia, Marysville, Lynnwood, Spokane, Vancouver WA
-7. **Phone:** [David's dedicated tracking number]
+7. **Phone:** [Dedicated tracking number]
 8. **Website:** https://washingtonhomes4cash.com
 9. **Hours:** Mon-Sat 8:00 AM - 7:00 PM
 10. **Description:**
@@ -205,7 +205,7 @@ The 3 domains are already set up for cold email. See `memory/cold_outreach_integ
 
 To create washingtonhomes4cash.com or washingtonhomeoffers.com:
 
-1. Copy the `davidbuyshomes4cash/` folder
+1. Copy the `washingtonhomes4cash/` folder
 2. Find-and-replace in all HTML files:
    - "Washington Homes 4 Cash" → new brand name
    - "washingtonhomes4cash.com" → new domain
@@ -220,6 +220,5 @@ To create washingtonhomes4cash.com or washingtonhomeoffers.com:
 
 | Domain | Primary | Accent | Use |
 |--------|---------|--------|-----|
-| washingtonhomes4cash.com | Navy #1a2744 | Gold #d4a843 | Personal brand |
-| washingtonhomes4cash.com | Forest Green #1a5632 | Navy #1a2744 | State-wide authority |
+| washingtonhomes4cash.com | Forest Green #1a5632 | Warm Orange #e07a2f | State-wide authority |
 | washingtonhomeoffers.com | Royal Blue #1e40af | Teal #0d9488 | Professional/clean |

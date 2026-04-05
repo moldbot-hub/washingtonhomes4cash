@@ -7,11 +7,11 @@
 /* ── Configuration ───────────────────────────────────────────────── */
 
 const CONFIG = {
-  apiUrl: 'https://app.setmate.io/api/public/cash-offer',
-  apiKey: 'CASH_OFFER_API_KEY_PLACEHOLDER',
+  apiUrl: 'https://www.setmate.ai/api/public/cash-offer',
+  apiKey: 'co_eff8fa1a866766449a6d81c7f5f672e8',
   domain: 'washingtonhomes4cash.com',
-  phone: '(360) 555-0456',
-  googlePlacesApiKey: 'GOOGLE_PLACES_API_KEY_PLACEHOLDER',
+  phone: '(425) 286-5639',
+  googlePlacesApiKey: 'AIzaSyDyJAA7J5lQxnzW-RO_beCUQlT2roApS1A',
 };
 
 /* ── State ───────────────────────────────────────────────────────── */
