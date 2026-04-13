@@ -243,6 +243,9 @@ function renderStep1(container) {
 
 function initAutocomplete(input) {
   if (typeof google === 'undefined' || !google.maps || !google.maps.places) return;
+  // Guard: don't attach a second instance to the same input (happens on step re-render)
+  if (input.dataset.autocompleteAttached) return;
+  input.dataset.autocompleteAttached = 'true';
   try {
     autocomplete = new google.maps.places.Autocomplete(input, {
       types: ['address'],
@@ -255,8 +258,9 @@ function initAutocomplete(input) {
         formData.address = place.formatted_address;
       }
     });
-  } catch (_e) {
-    // Google Maps not loaded — degrade gracefully
+  } catch (e) {
+    console.warn('Google Places Autocomplete failed to init:', e);
+    // Input still usable as a plain text field
   }
 }
 
@@ -987,14 +991,30 @@ function renderResults(data) {
 /* ================================================================ */
 
 function loadGooglePlaces() {
-  if (typeof google !== 'undefined' && google.maps && google.maps.places) return;
+  if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+    // Already loaded — fire callback immediately
+    window._googlePlacesReady();
+    return;
+  }
   if (document.getElementById('google-places-script')) return;
+
+  // Auth failure handler — degrade gracefully instead of freezing
+  window.gm_authFailure = function () {
+    console.warn('Google Maps auth failed — address autocomplete disabled.');
+    var input = document.getElementById('address-input');
+    if (input) {
+      input.disabled = false;
+      input.placeholder = 'Enter your property address';
+    }
+  };
+
   var script = document.createElement('script');
   script.id = 'google-places-script';
+  // loading=async is Google's recommended approach (replaces defer+callback conflict)
   script.src = 'https://maps.googleapis.com/maps/api/js?key=' +
-    CONFIG.googlePlacesApiKey + '&libraries=places&callback=_googlePlacesReady';
+    CONFIG.googlePlacesApiKey + '&libraries=places&callback=_googlePlacesReady&loading=async';
   script.async = true;
-  script.defer = true;
+  // NOTE: do NOT set script.defer — it conflicts with the callback= param and freezes input
   document.head.appendChild(script);
 }
 
