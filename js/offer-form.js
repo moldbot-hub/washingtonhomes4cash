@@ -241,27 +241,67 @@ function renderStep1(container) {
   }, 0);
 }
 
-function initAutocomplete(input) {
-  if (typeof google === 'undefined' || !google.maps || !google.maps.places) return;
-  // Guard: don't attach a second instance to the same input (happens on step re-render)
-  if (input.dataset.autocompleteAttached) return;
-  input.dataset.autocompleteAttached = 'true';
-  try {
-    autocomplete = new google.maps.places.Autocomplete(input, {
-      types: ['address'],
-      componentRestrictions: { country: 'us' },
-    });
-    autocomplete.addListener('place_changed', function () {
-      var place = autocomplete.getPlace();
-      if (place && place.formatted_address) {
-        input.value = place.formatted_address;
-        formData.address = place.formatted_address;
-      }
-    });
-  } catch (e) {
-    console.warn('Google Places Autocomplete failed to init:', e);
-    // Input still usable as a plain text field
+function initAutocomplete(inputEl) {
+  // Guard: don't attach twice (e.g. on step re-render)
+  if (inputEl.dataset.autocompleteAttached) return;
+  inputEl.dataset.autocompleteAttached = 'true';
+
+  // PlaceAutocompleteElement is the current API (Autocomplete deprecated for new keys post-March 2025)
+  if (typeof google !== 'undefined' && google.maps && google.maps.places &&
+      typeof google.maps.places.PlaceAutocompleteElement !== 'undefined') {
+    try {
+      // Wrap the original input in a container for the new element
+      var wrapper = inputEl.parentNode;
+      // Hide original input and insert the new element in its place
+      var pac = new google.maps.places.PlaceAutocompleteElement({
+        componentRestrictions: { country: 'us' },
+        types: ['address'],
+      });
+      // Style it to match
+      pac.style.width = '100%';
+      pac.style.display = 'block';
+      pac.setAttribute('placeholder', 'Enter your property address');
+      pac.className = inputEl.className;
+      inputEl.style.display = 'none';
+      wrapper.insertBefore(pac, inputEl);
+      pac.addEventListener('gmp-placeselect', function (e) {
+        var addr = e.place && e.place.formattedAddress ? e.place.formattedAddress :
+                   (pac.value || '');
+        inputEl.value = addr;
+        formData.address = addr;
+      });
+      // Keep plain input in sync for manual/typed entries
+      pac.addEventListener('input', function () {
+        inputEl.value = pac.value || '';
+        formData.address = inputEl.value;
+      });
+      return;
+    } catch (e) {
+      console.warn('PlaceAutocompleteElement failed, falling back:', e);
+      inputEl.style.display = '';
+    }
   }
+
+  // Fallback: legacy Autocomplete (works for keys created before March 2025)
+  if (typeof google !== 'undefined' && google.maps && google.maps.places &&
+      typeof google.maps.places.Autocomplete !== 'undefined') {
+    try {
+      var ac = new google.maps.places.Autocomplete(inputEl, {
+        types: ['address'],
+        componentRestrictions: { country: 'us' },
+      });
+      ac.addListener('place_changed', function () {
+        var place = ac.getPlace();
+        if (place && place.formatted_address) {
+          inputEl.value = place.formatted_address;
+          formData.address = place.formatted_address;
+        }
+      });
+    } catch (e) {
+      console.warn('Autocomplete fallback failed:', e);
+    }
+  }
+  // If neither API works, field remains a plain text input — form still functions
 }
 
 /* ================================================================ */
@@ -991,34 +1031,17 @@ function renderResults(data) {
 /* ================================================================ */
 
 function loadGooglePlaces() {
-  if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-    // Already loaded — fire callback immediately
-    window._googlePlacesReady();
-    return;
-  }
   if (document.getElementById('google-places-script')) return;
-
-  // Auth failure handler — degrade gracefully instead of freezing
-  window.gm_authFailure = function () {
-    console.warn('Google Maps auth failed — address autocomplete disabled.');
-    var input = document.getElementById('address-input');
-    if (input) {
-      input.disabled = false;
-      input.placeholder = 'Enter your property address';
-    }
-  };
-
+  // Use the new Google Maps bootstrap loader with loading=async (required for new API keys)
   var script = document.createElement('script');
   script.id = 'google-places-script';
-  // loading=async is Google's recommended approach (replaces defer+callback conflict)
   script.src = 'https://maps.googleapis.com/maps/api/js?key=' +
-    CONFIG.googlePlacesApiKey + '&libraries=places&callback=_googlePlacesReady&loading=async';
+    CONFIG.googlePlacesApiKey + '&libraries=places&loading=async&callback=_googlePlacesReady';
   script.async = true;
-  // NOTE: do NOT set script.defer — it conflicts with the callback= param and freezes input
   document.head.appendChild(script);
 }
 
-// Callback for async Google Maps load
+// Callback for Google Maps load
 window._googlePlacesReady = function () {
   var input = document.getElementById('address-input');
   if (input) initAutocomplete(input);
