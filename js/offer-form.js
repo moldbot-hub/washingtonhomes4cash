@@ -1,5 +1,5 @@
 /**
- * Multi-step Cash Offer Form for washingtonhomes4cash.com
+ * Multi-step Cash Offer Form for davidbuyshomes4cash.com
  * Renders inside #offer-form-container, results in #offer-results-container
  * Pure vanilla JavaScript — no frameworks.
  */
@@ -10,7 +10,7 @@ const CONFIG = {
   apiUrl: 'https://www.setmate.ai/api/public/cash-offer',
   apiKey: 'co_eff8fa1a866766449a6d81c7f5f672e8',
   domain: 'washingtonhomes4cash.com',
-  phone: '(425) 286-5639',
+  phone: '(253) 289-3603',
   googlePlacesApiKey: 'AIzaSyDyJAA7J5lQxnzW-RO_beCUQlT2roApS1A',
 };
 
@@ -33,6 +33,18 @@ const formData = {
   email: '',
   timeline: '',
   reasonForSelling: '',
+  // County lookup state
+  countyData: null,
+  countyDataLoaded: false,
+  // Seller-provided corrections / additions
+  hasAdditions: 'no',        // 'yes' | 'no'
+  additionsDescription: '',
+  additionsPermitted: '',    // 'yes' | 'partial' | 'no'
+  hasADU: 'no',             // 'yes' | 'no'
+  aduType: '',               // 'attached' | 'garage' | 'basement' | 'detached' | 'other'
+  aduPermitted: '',          // 'yes' | 'no'
+  aduSqft: null,
+  otherChanges: '',
 };
 
 let currentStep = 1;
@@ -92,6 +104,32 @@ function formatDate(dateStr) {
 }
 
 /* ── DOM helpers ─────────────────────────────────────────────────── */
+
+/* ── Property Lookup ─────────────────────────────────────────────────── */
+
+/**
+ * Fires an async property lookup to pre-populate step 2 with county records.
+ * Calls onComplete(data) where data may be null if lookup fails / not found.
+ */
+function fetchPropertyData(address, onComplete) {
+  fetch('https://www.setmate.ai/api/public/property-lookup', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': CONFIG.apiKey,
+    },
+    body: JSON.stringify({ address: address, source: CONFIG.domain }),
+  })
+    .then(function (res) {
+      return res.ok ? res.json() : null;
+    })
+    .then(function (data) {
+      onComplete(data || null);
+    })
+    .catch(function () {
+      onComplete(null);
+    });
+}
 
 function el(tag, attrs, children) {
   var node = document.createElement(tag);
@@ -228,6 +266,33 @@ function renderStep1(container) {
         return;
       }
       formData.address = val;
+      // Reset county lookup state and clear any prior property values
+      formData.countyData = null;
+      formData.countyDataLoaded = false;
+      formData.propertyType = '';
+      formData.beds = null;
+      formData.baths = null;
+      formData.sqft = null;
+      formData.yearBuilt = null;
+      formData.lotSqft = null;
+      // Fire async county lookup — step 2 shows a loading banner until it resolves
+      fetchPropertyData(val, function (data) {
+        if (data) {
+          if (data.propertyType) formData.propertyType = data.propertyType;
+          if (data.beds != null)      formData.beds      = data.beds;
+          if (data.baths != null)     formData.baths     = data.baths;
+          if (data.sqft != null)      formData.sqft      = data.sqft;
+          if (data.yearBuilt != null) formData.yearBuilt = data.yearBuilt;
+          if (data.lotSqft != null)   formData.lotSqft   = data.lotSqft;
+          formData.countyData = data;
+        }
+        formData.countyDataLoaded = true;
+        // Re-render step 2 with populated data
+        if (currentStep === 2) {
+          var c = document.getElementById('offer-form-container');
+          if (c) transitionTo(c, renderStep2);
+        }
+      });
       transitionTo(container, renderStep2);
     },
   }, 'Get My Cash Offer');
@@ -313,34 +378,40 @@ function renderStep2(container) {
 
   var section = el('div', { className: 'form-section fade-in' });
   section.appendChild(renderProgress(2));
-  section.appendChild(el('h2', null, 'Tell us about your property'));
+  section.appendChild(el('h2', null, 'Confirm Your Property Details'));
 
-  // Property type — radio buttons
+  // ── County records status banner ─────────────────────────────────
+  if (!formData.countyDataLoaded) {
+    var loadWrap = el('div', { className: 'county-loading' });
+    loadWrap.appendChild(el('div', { className: 'mini-spinner' }));
+    loadWrap.appendChild(el('span', { className: 'county-loading-text' },
+      'Pulling county records…'));
+    section.appendChild(loadWrap);
+  } else if (formData.countyData) {
+    var successBadge = el('div', { className: 'county-badge county-badge-success' },
+      '✓  County records found — review below and correct anything that’s off');
+    section.appendChild(successBadge);
+  } else {
+    var infoBadge = el('div', { className: 'county-badge county-badge-info' },
+      'ℹ️  Could not auto-fill from county records — please fill in the details below');
+    section.appendChild(infoBadge);
+  }
+
+  // ── Property type ─────────────────────────────────────────────────
   var types = [
-    { value: 'single_family', label: 'Single Family' },
-    { value: 'duplex_triplex', label: 'Duplex / Triplex' },
-    { value: 'condo_townhouse', label: 'Condo / Townhouse' },
-    { value: 'mobile_home', label: 'Mobile Home' },
-    { value: 'other', label: 'Other' },
+    { value: 'single_family',    label: 'Single Family' },
+    { value: 'duplex_triplex',   label: 'Duplex / Triplex' },
+    { value: 'condo_townhouse',  label: 'Condo / Townhouse' },
+    { value: 'mobile_home',      label: 'Mobile Home' },
+    { value: 'other',            label: 'Other' },
   ];
+  section.appendChild(el('div', { className: 'form-group' }, [
+    el('label', { className: 'form-label' }, 'Property Type'),
+    renderButtonGroup(types, formData.propertyType,
+      function (v) { formData.propertyType = v; }),
+  ]));
 
-  var typeGroup = el('div', { className: 'form-group' });
-  typeGroup.appendChild(el('label', { className: 'form-label' }, 'Property Type'));
-  var typeRadios = el('div', { className: 'radio-group' });
-  types.forEach(function (t) {
-    var id = 'ptype-' + t.value;
-    var radio = el('input', { type: 'radio', name: 'propertyType', id: id, value: t.value });
-    if (formData.propertyType === t.value) radio.checked = true;
-    radio.addEventListener('change', function () {
-      formData.propertyType = t.value;
-    });
-    var lbl = el('label', { for: id, className: 'radio-label' }, [radio, el('span', null, ' ' + t.label)]);
-    typeRadios.appendChild(lbl);
-  });
-  typeGroup.appendChild(typeRadios);
-  section.appendChild(typeGroup);
-
-  // Bedrooms
+  // ── Bedrooms ──────────────────────────────────────────────────────
   section.appendChild(el('div', { className: 'form-group' }, [
     el('label', { className: 'form-label' }, 'Bedrooms'),
     renderButtonGroup(
@@ -350,7 +421,7 @@ function renderStep2(container) {
     ),
   ]));
 
-  // Bathrooms
+  // ── Bathrooms ─────────────────────────────────────────────────────
   section.appendChild(el('div', { className: 'form-group' }, [
     el('label', { className: 'form-label' }, 'Bathrooms'),
     renderButtonGroup(
@@ -360,7 +431,7 @@ function renderStep2(container) {
     ),
   ]));
 
-  // Sqft with presets
+  // ── Square footage ────────────────────────────────────────────────
   var sqftInput = el('input', {
     type: 'number',
     id: 'sqft-input',
@@ -372,25 +443,22 @@ function renderStep2(container) {
   });
   sqftInput.addEventListener('input', function () {
     formData.sqft = sqftInput.value ? Number(sqftInput.value) : null;
-    // deselect presets
-    sqftPresets.querySelectorAll('.btn-option').forEach(function (b) { b.classList.remove('selected'); });
+    sqftPresets.querySelectorAll('.btn-option').forEach(function (b) {
+      b.classList.remove('selected');
+    });
   });
   var sqftPresets = renderButtonGroup(
     [800, 1200, 1500, 2000, 2500, { value: 3000, label: '3000+' }],
     formData.sqft,
-    function (v) {
-      formData.sqft = Number(v);
-      sqftInput.value = v;
-    }
+    function (v) { formData.sqft = Number(v); sqftInput.value = v; }
   );
-
   section.appendChild(el('div', { className: 'form-group' }, [
-    el('label', { for: 'sqft-input', className: 'form-label' }, 'Approximate Square Feet'),
+    el('label', { for: 'sqft-input', className: 'form-label' }, 'Square Footage'),
     sqftPresets,
     sqftInput,
   ]));
 
-  // Year built (optional)
+  // ── Year built (optional) ─────────────────────────────────────────
   var yrInput = el('input', {
     type: 'number',
     id: 'year-built',
@@ -408,7 +476,7 @@ function renderStep2(container) {
     yrInput,
   ]));
 
-  // Lot size (optional)
+  // ── Lot size (optional) ───────────────────────────────────────────
   var lotInput = el('input', {
     type: 'number',
     id: 'lot-sqft',
@@ -425,18 +493,176 @@ function renderStep2(container) {
     lotInput,
   ]));
 
-  // Error
+  // ════════════════════════════════════════════════════════════════
+  //  Improvements not in county records
+  // ════════════════════════════════════════════════════════════════
+  section.appendChild(el('hr', { className: 'form-divider' }));
+  section.appendChild(el('h3', { className: 'form-subhead' },
+    'Improvements Not Reflected in County Records'));
+  section.appendChild(el('p', { className: 'form-hint' },
+    'County records sometimes lag years behind actual improvements. ' +
+    'If you’ve made changes that aren’t captured, telling us here can ' +
+    'meaningfully increase your offer.'));
+
+  // ── Additions / improvements toggle ──────────────────────────────
+  var additionsDetails = el('div', {
+    className: 'conditional-block',
+    style: formData.hasAdditions === 'yes' ? '' : 'display:none',
+  });
+
+  var additionsGroup = el('div', { className: 'form-group' });
+  additionsGroup.appendChild(el('label', { className: 'form-label' },
+    'Have you made additions or improvements not in county records?'));
+  additionsGroup.appendChild(renderButtonGroup(
+    [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }],
+    formData.hasAdditions,
+    function (v) {
+      formData.hasAdditions = v;
+      additionsDetails.style.display = v === 'yes' ? '' : 'none';
+    }
+  ));
+  additionsGroup.appendChild(additionsDetails);
+  section.appendChild(additionsGroup);
+
+  // Additions — description
+  var addDesc = el('textarea', {
+    className: 'form-input form-textarea',
+    placeholder: 'Describe the improvements — e.g. "Added 400 sqft master suite in 2019, converted garage to office"',
+    rows: '3',
+  });
+  addDesc.value = formData.additionsDescription;
+  addDesc.addEventListener('input', function () {
+    formData.additionsDescription = addDesc.value;
+  });
+  additionsDetails.appendChild(el('div', { className: 'form-group' }, [
+    el('label', { className: 'form-label' }, 'Describe the improvements'),
+    addDesc,
+  ]));
+
+  // Additions — permitted?
+  additionsDetails.appendChild(el('div', { className: 'form-group' }, [
+    el('label', { className: 'form-label' }, 'Were these additions permitted?'),
+    renderButtonGroup(
+      [
+        { value: 'yes',     label: 'Yes — fully permitted' },
+        { value: 'partial', label: 'Partially permitted' },
+        { value: 'no',      label: 'No permits pulled' },
+      ],
+      formData.additionsPermitted,
+      function (v) { formData.additionsPermitted = v; }
+    ),
+  ]));
+
+  // ── ADU toggle ────────────────────────────────────────────────────
+  var aduDetails = el('div', {
+    className: 'conditional-block',
+    style: formData.hasADU === 'yes' ? '' : 'display:none',
+  });
+
+  var aduGroup = el('div', { className: 'form-group' });
+  aduGroup.appendChild(el('label', { className: 'form-label' },
+    'Is there an ADU on the property? (in-law suite, garage conversion, basement unit, detached cottage, etc.)'));
+  aduGroup.appendChild(renderButtonGroup(
+    [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }],
+    formData.hasADU,
+    function (v) {
+      formData.hasADU = v;
+      aduDetails.style.display = v === 'yes' ? '' : 'none';
+    }
+  ));
+  aduGroup.appendChild(aduDetails);
+  section.appendChild(aduGroup);
+
+  // ADU — type
+  var aduTypeSelect = el('select', { className: 'form-input' });
+  [
+    { value: '',          label: 'Select ADU type…' },
+    { value: 'attached',  label: 'Attached addition / in-law suite' },
+    { value: 'garage',    label: 'Garage conversion' },
+    { value: 'basement',  label: 'Basement unit' },
+    { value: 'detached',  label: 'Detached cottage / backyard unit' },
+    { value: 'other',     label: 'Other' },
+  ].forEach(function (o) {
+    var opt = el('option', { value: o.value }, o.label);
+    if (formData.aduType === o.value) opt.selected = true;
+    aduTypeSelect.appendChild(opt);
+  });
+  aduTypeSelect.addEventListener('change', function () {
+    formData.aduType = aduTypeSelect.value;
+  });
+  aduDetails.appendChild(el('div', { className: 'form-group' }, [
+    el('label', { className: 'form-label' }, 'ADU type'),
+    aduTypeSelect,
+  ]));
+
+  // ADU — permitted?
+  aduDetails.appendChild(el('div', { className: 'form-group' }, [
+    el('label', { className: 'form-label' }, 'Is the ADU permitted?'),
+    renderButtonGroup(
+      [
+        { value: 'yes', label: 'Yes — permitted' },
+        { value: 'no',  label: 'No — unpermitted' },
+      ],
+      formData.aduPermitted,
+      function (v) { formData.aduPermitted = v; }
+    ),
+  ]));
+
+  // ADU — size
+  var aduSqftInput = el('input', {
+    type: 'number',
+    className: 'form-input',
+    placeholder: 'e.g. 600',
+    value: formData.aduSqft || '',
+    min: '50',
+  });
+  aduSqftInput.addEventListener('input', function () {
+    formData.aduSqft = aduSqftInput.value ? Number(aduSqftInput.value) : null;
+  });
+  aduDetails.appendChild(el('div', { className: 'form-group' }, [
+    el('label', { className: 'form-label' }, 'Approximate ADU size in sqft (optional)'),
+    aduSqftInput,
+  ]));
+
+  // ── Other changes ─────────────────────────────────────────────────
+  var otherTA = el('textarea', {
+    className: 'form-input form-textarea',
+    placeholder: 'Anything else our search may have missed? (solar panels, new roof, full kitchen remodel, etc.)',
+    rows: '3',
+  });
+  otherTA.value = formData.otherChanges || '';
+  otherTA.addEventListener('input', function () {
+    formData.otherChanges = otherTA.value;
+  });
+  section.appendChild(el('div', { className: 'form-group' }, [
+    el('label', { className: 'form-label' },
+      'Any other changes not captured above? (optional)'),
+    otherTA,
+  ]));
+
+  // ── Error + nav ───────────────────────────────────────────────────
   var errMsg = el('p', { className: 'form-error', id: 'step2-error' });
   section.appendChild(errMsg);
 
-  // Nav
   section.appendChild(renderNav(
     function () { transitionTo(container, renderStep1); },
     function () {
-      if (!formData.propertyType) { errMsg.textContent = 'Please select a property type.'; return; }
-      if (!formData.beds) { errMsg.textContent = 'Please select bedrooms.'; return; }
-      if (!formData.baths) { errMsg.textContent = 'Please select bathrooms.'; return; }
-      if (!formData.sqft) { errMsg.textContent = 'Please enter approximate square footage.'; return; }
+      if (!formData.propertyType) {
+        errMsg.textContent = 'Please select a property type.';
+        return;
+      }
+      if (!formData.beds) {
+        errMsg.textContent = 'Please select number of bedrooms.';
+        return;
+      }
+      if (!formData.baths) {
+        errMsg.textContent = 'Please select number of bathrooms.';
+        return;
+      }
+      if (!formData.sqft) {
+        errMsg.textContent = 'Please enter approximate square footage.';
+        return;
+      }
       transitionTo(container, renderStep3);
     }
   ));
@@ -771,6 +997,27 @@ function renderLoading(container) {
 function submitOffer(container) {
   var stopLoading = renderLoading(container);
 
+  // Build combined notes — merge free-text with structured ADU/additions data
+  var notesParts = [];
+  if (formData.notes) notesParts.push(formData.notes);
+  if (formData.hasAdditions === 'yes' && formData.additionsDescription) {
+    var permitLabel = { yes: 'fully permitted', partial: 'partially permitted', no: 'no permits' };
+    var addNote = 'ADDITIONS: ' + formData.additionsDescription;
+    if (formData.additionsPermitted) {
+      addNote += ' [' + (permitLabel[formData.additionsPermitted] || formData.additionsPermitted) + ']';
+    }
+    notesParts.push(addNote);
+  }
+  if (formData.hasADU === 'yes') {
+    var aduNote = 'ADU: ' + (formData.aduType || 'type unspecified');
+    if (formData.aduSqft) aduNote += ' (~' + formData.aduSqft + ' sqft)';
+    if (formData.aduPermitted) {
+      aduNote += ' [' + (formData.aduPermitted === 'yes' ? 'permitted' : 'unpermitted') + ']';
+    }
+    notesParts.push(aduNote);
+  }
+  if (formData.otherChanges) notesParts.push('OTHER: ' + formData.otherChanges);
+
   var payload = {
     address: formData.address,
     firstName: formData.firstName.trim(),
@@ -787,7 +1034,12 @@ function submitOffer(container) {
     issues: formData.issues,
     timeline: formData.timeline,
     reasonForSelling: formData.reasonForSelling,
-    notes: formData.notes,
+    notes: notesParts.join('\n'),
+    hasADU: formData.hasADU === 'yes',
+    aduType: formData.aduType || null,
+    aduPermitted: formData.aduPermitted || null,
+    aduSqft: formData.aduSqft || null,
+    hasUnpermittedWork: formData.hasAdditions === 'yes' && formData.additionsPermitted !== 'yes',
     source: CONFIG.domain,
     tracking: {
       visitorId: visitorId,
