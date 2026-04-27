@@ -1804,3 +1804,296 @@ p  { margin-bottom: 1rem; }
   color: var(--navy);
   font-weight: 600;
 }
+
+/* ── Analysis Results ────────────────────────────────────────── */
+
+.ar { max-width: 900px; margin: 0 auto; }
+
+.ar-hero {
+  text-align: center;
+  padding: 32px 24px;
+  background: var(--navy);
+  border-radius: var(--radius-lg);
+  margin-bottom: 32px;
+}
+
+.ar-hero-label {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.ar-hero-addr {
+  color: var(--white) !important;
+  font-size: 1.6rem;
+  margin-bottom: 12px;
+}
+
+.ar-chips {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ar-chip {
+  display: inline-block;
+  background: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.85);
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ar-section-title {
+  font-size: 1.25rem;
+  color: var(--navy);
+  margin: 36px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--medium-gray);
+}
+
+/* Valuation Cards */
+.ar-val-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ar-val-card {
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  border-left: 4px solid var(--medium-gray);
+  background: var(--light-gray);
+}
+
+.ar-val--amber { border-left-color: #f59e0b; }
+.ar-val--blue  { border-left-color: #3b82f6; }
+.ar-val--green { border-left-color: #10b981; }
+
+.ar-val-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.ar-val-range {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.ar-val-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Condition Badges on comp cards */
+.ar-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 6px;
+}
+
+.ar-badge--green { background: #d1fae5; color: #065f46; }
+.ar-badge--amber { background: #fef3c7; color: #92400e; }
+.ar-badge--blue  { background: #dbeafe; color: #1e40af; }
+
+/* Rehab Table */
+.ar-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 0.92rem;
+}
+
+.ar-table th {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--medium-gray);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.ar-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: top;
+}
+
+.ar-table-item { font-weight: 600; color: var(--navy); white-space: nowrap; }
+.ar-table-scope { color: var(--text-muted); font-size: 0.85rem; }
+
+.ar-table-total td {
+  font-weight: 700;
+  background: #fef9ee;
+  border-bottom: none;
+  font-size: 1rem;
+}
+
+/* Offer Paths */
+.ar-path {
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
+  border: 2px solid var(--medium-gray);
+  background: var(--white);
+}
+
+.ar-path--cash { border-color: var(--gold); }
+.ar-path--partner { border-color: #3b82f6; }
+
+.ar-path-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.ar-path h4 {
+  font-size: 1.2rem;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.ar-path-amount {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--navy);
+  margin-bottom: 12px;
+}
+
+.ar-path-desc {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.ar-path-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+.ar-path-list li {
+  padding: 5px 0 5px 20px;
+  position: relative;
+  color: var(--text-dark);
+  font-size: 0.92rem;
+}
+
+.ar-path-list li::before {
+  content: "\2713";
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* Bump Rule Callout */
+.ar-bump {
+  background: #fef9ee;
+  border: 1.5px solid #fcd34d;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  color: var(--text-dark);
+  margin-top: 8px;
+}
+
+/* ── Condition Assessment Grid (Step 3) ──────────────────────── */
+
+.cond-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.cond-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--light-gray);
+  border-radius: var(--radius);
+}
+
+.cond-label {
+  font-weight: 600;
+  color: var(--navy);
+  font-size: 0.92rem;
+  min-width: 130px;
+  flex-shrink: 0;
+}
+
+.cond-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cond-btn {
+  padding: 7px 14px;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  background: var(--white);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-family: var(--font-stack);
+  color: var(--text-dark);
+  transition: all var(--transition);
+}
+
+.cond-btn:hover { border-color: var(--gold); }
+
+.cond-btn.selected {
+  background: var(--gold);
+  color: var(--navy);
+  font-weight: 700;
+  border-color: var(--gold);
+}
+
+/* ── Analysis Results responsive ─────────────────────────────── */
+
+@media (max-width: 768px) {
+  .ar-val-grid { grid-template-columns: 1fr; }
+  .ar-hero-addr { font-size: 1.2rem; }
+  .ar-path-amount { font-size: 1.6rem; }
+  .ar-table { font-size: 0.82rem; }
+  .ar-table th, .ar-table td { padding: 8px 6px; }
+  .ar-table-scope { display: none; }
+  .cond-row { flex-direction: column; align-items: stretch; }
+  .cond-label { min-width: unset; margin-bottom: 4px; }
+  .cond-options { justify-content: flex-start; }
+}
+
+@media (max-width: 480px) {
+  .ar-hero { padding: 20px 16px; }
+  .ar-val-range { font-size: 1.05rem; }
+  .ar-path { padding: 20px 16px; }
+  .cond-btn { padding: 6px 10px; font-size: 0.78rem; }
+}
