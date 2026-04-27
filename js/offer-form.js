@@ -480,7 +480,7 @@
   /* ── Results ────────────────────────────────────────────────── */
   function renderResults(cont, data) {
     cont.innerHTML = '';
-    var r = el('div', { className: 'ar fade-in' });
+    var r = el('div', { className: 'ar' });
 
     // ── Hero ──
     var hero = el('div', { className: 'ar-hero' });
