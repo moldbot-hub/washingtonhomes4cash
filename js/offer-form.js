@@ -5,7 +5,7 @@
   'use strict';
 
   var API_URL = 'https://www.setmate.ai/api/public/property-analysis';
-  var API_KEY = 'nwgc_lead_2026_sk';
+  var API_KEY = 'co_eff8fa1a866766449a6d81c7f5f672e8';
 
   var host = window.location.hostname.replace(/^www\./, '');
   var brandEmail = host === 'washingtonhomes4cash.com' ? 'team@washingtonhomes4cash.com'
