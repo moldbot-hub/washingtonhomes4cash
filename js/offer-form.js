@@ -147,7 +147,7 @@
     section.appendChild(renderProgress(1));
     section.appendChild(el('h2', null, 'Enter Your Property Address'));
     section.appendChild(el('p', { className: 'form-hint' },
-      "We'll pull your property details from county records automatically."));
+      "We'll pull your property details automatically — just enter your full address with city and zip."));
 
     var input = el('input', {
       type: 'text', className: 'form-input form-input-lg',
@@ -169,6 +169,9 @@
     section.appendChild(renderNav(null, function () {
       var addr = formData.address.trim();
       if (!addr || addr.length < 10) { errMsg.textContent = 'Please enter a full street address including city and state.'; return; }
+      var hasZip = /\d{5}/.test(addr);
+      var hasCity = /,/.test(addr);
+      if (!hasZip && !hasCity) { errMsg.textContent = 'Please include the city and state (or zip code) so we can find your property.'; return; }
       fetchPropertyLookup(addr);
       transitionTo(cont, renderStep2);
     }, 'Look Up My Property →'));
@@ -182,27 +185,27 @@
     var section = el('div', { className: 'form-section fade-in' });
     section.appendChild(renderProgress(2));
 
-    // ── Still loading county data ──
+    // ── Still loading ──
     if (formData.lookupLoading) {
       section.appendChild(el('h2', null, 'Looking Up Your Property…'));
       var loadWrap = el('div', { className: 'county-loading' });
       loadWrap.appendChild(el('div', { className: 'mini-spinner' }));
       loadWrap.appendChild(el('span', { className: 'county-loading-text' },
-        'Pulling your property details from county records…'));
+        'Pulling your property details…'));
       section.appendChild(loadWrap);
       cont.appendChild(section);
       return;
     }
 
     var d = formData.lookupData;
-    var hasCountyData = d && (d.beds || d.sqft || d.yearBuilt);
+    var hasData = d && (d.beds || d.sqft || d.yearBuilt);
 
-    // ── County data found: show summary + confirm ──
-    if (hasCountyData) {
+    // ── Data found: show summary + confirm ──
+    if (hasData) {
       section.appendChild(el('h2', null, 'We Found Your Property'));
 
       var summaryCard = el('div', { className: 'property-summary-card' });
-      summaryCard.appendChild(el('div', { className: 'summary-card-label' }, '✓ Found in county records'));
+      summaryCard.appendChild(el('div', { className: 'summary-card-label' }, '✓ Property details found'));
       var chips = el('div', { className: 'property-summary-grid' });
       var summaryItems = [
         { label: 'Type', value: d.propertyType || null },
@@ -226,11 +229,11 @@
         'If anything looks wrong, update the fields below. Otherwise just hit Continue.'));
 
     } else {
-      // ── County data NOT found: manual entry ──
+      // ── Data NOT found: manual entry ──
       section.appendChild(el('h2', null, 'Tell Us About Your Property'));
       if (formData.lookupDone) {
         section.appendChild(el('div', { className: 'county-badge county-badge-info' },
-          'We couldn\'t pull county records automatically — please fill in your property details below.'));
+          'We couldn\'t find property records for this address — please fill in your details below.'));
       }
     }
 
