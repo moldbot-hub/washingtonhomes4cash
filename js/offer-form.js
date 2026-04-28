@@ -1,10 +1,12 @@
 /* ============================================
    Property Analysis Form — Multi-step + Results
+   Auto-pulls county records on address entry.
    ============================================ */
 (function () {
   'use strict';
 
   var API_URL = 'https://www.setmate.ai/api/public/property-analysis';
+  var LOOKUP_URL = 'https://www.setmate.ai/api/public/property-lookup';
   var API_KEY = 'co_eff8fa1a866766449a6d81c7f5f672e8';
 
   var host = window.location.hostname.replace(/^www\./, '');
@@ -27,6 +29,10 @@
       paintInterior: '', paintExterior: '',
     },
     firstName: '', lastName: '', phone: '', email: '', consent: false,
+    // County lookup
+    lookupLoading: false,
+    lookupDone: false,
+    lookupData: null,
   };
 
   /* ── Helpers ────────────────────────────────────────────────── */
@@ -104,6 +110,36 @@
     return nav;
   }
 
+  /* ── Property Lookup ────────────────────────────────────────── */
+  function fetchPropertyLookup(address) {
+    formData.lookupLoading = true;
+    formData.lookupDone = false;
+    formData.lookupData = null;
+    fetch(LOOKUP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+      body: JSON.stringify({ address: address }),
+    })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (data) {
+        formData.lookupLoading = false;
+        formData.lookupDone = true;
+        if (data && data.found && data.property) {
+          formData.lookupData = data.property;
+          if (data.property.beds) formData.beds = data.property.beds;
+          if (data.property.baths) formData.baths = data.property.baths;
+          if (data.property.sqft) formData.sqft = data.property.sqft;
+          if (data.property.yearBuilt) formData.yearBuilt = data.property.yearBuilt;
+        }
+        if (currentStep === 2 && container) transitionTo(container, renderStep2);
+      })
+      .catch(function () {
+        formData.lookupLoading = false;
+        formData.lookupDone = true;
+        if (currentStep === 2 && container) transitionTo(container, renderStep2);
+      });
+  }
+
   /* ── Step 1: Address ────────────────────────────────────────── */
   function renderStep1(cont) {
     currentStep = 1;
@@ -111,7 +147,7 @@
     section.appendChild(renderProgress(1));
     section.appendChild(el('h2', null, 'Enter Your Property Address'));
     section.appendChild(el('p', { className: 'form-hint' },
-      "We’ll pull comparable sales and county records to build your free analysis."));
+      "We'll pull your property details from county records automatically."));
 
     var input = el('input', {
       type: 'text', className: 'form-input form-input-lg',
@@ -133,21 +169,72 @@
     section.appendChild(renderNav(null, function () {
       var addr = formData.address.trim();
       if (!addr || addr.length < 10) { errMsg.textContent = 'Please enter a full street address including city and state.'; return; }
+      fetchPropertyLookup(addr);
       transitionTo(cont, renderStep2);
     }, 'Look Up My Property →'));
     cont.appendChild(section);
     setTimeout(function () { input.focus(); }, 250);
   }
 
-  /* ── Step 2: Property Details ───────────────────────────────── */
+  /* ── Step 2: Property Details (auto-fill from county) ───────── */
   function renderStep2(cont) {
     currentStep = 2;
     var section = el('div', { className: 'form-section fade-in' });
     section.appendChild(renderProgress(2));
-    section.appendChild(el('h2', null, 'Tell Us About Your Property'));
-    section.appendChild(el('p', { className: 'form-hint' },
-      "This helps us find the best comps. If you’re unsure about a field, your best guess works."));
 
+    // ── Still loading county data ──
+    if (formData.lookupLoading) {
+      section.appendChild(el('h2', null, 'Looking Up Your Property…'));
+      var loadWrap = el('div', { className: 'county-loading' });
+      loadWrap.appendChild(el('div', { className: 'mini-spinner' }));
+      loadWrap.appendChild(el('span', { className: 'county-loading-text' },
+        'Pulling your property details from county records…'));
+      section.appendChild(loadWrap);
+      cont.appendChild(section);
+      return;
+    }
+
+    var d = formData.lookupData;
+    var hasCountyData = d && (d.beds || d.sqft || d.yearBuilt);
+
+    // ── County data found: show summary + confirm ──
+    if (hasCountyData) {
+      section.appendChild(el('h2', null, 'We Found Your Property'));
+
+      var summaryCard = el('div', { className: 'property-summary-card' });
+      summaryCard.appendChild(el('div', { className: 'summary-card-label' }, '✓ Found in county records'));
+      var chips = el('div', { className: 'property-summary-grid' });
+      var summaryItems = [
+        { label: 'Type', value: d.propertyType || null },
+        { label: 'Bedrooms', value: d.beds != null ? d.beds + ' bed' : null },
+        { label: 'Bathrooms', value: d.baths != null ? d.baths + ' bath' : null },
+        { label: 'Sqft', value: d.sqft != null ? Number(d.sqft).toLocaleString() + ' sqft' : null },
+        { label: 'Built', value: d.yearBuilt ? String(d.yearBuilt) : null },
+        { label: 'Lot', value: d.lotSqft ? Number(d.lotSqft).toLocaleString() + ' sqft lot' : null },
+        { label: 'County', value: d.county || null },
+      ].filter(function (i) { return i.value; });
+      summaryItems.forEach(function (item) {
+        var chip = el('div', { className: 'summary-chip' });
+        chip.appendChild(el('span', { className: 'summary-chip-label' }, item.label + ':'));
+        chip.appendChild(el('span', { className: 'summary-chip-value' }, item.value));
+        chips.appendChild(chip);
+      });
+      summaryCard.appendChild(chips);
+      section.appendChild(summaryCard);
+
+      section.appendChild(el('p', { className: 'form-hint' },
+        'If anything looks wrong, update the fields below. Otherwise just hit Continue.'));
+
+    } else {
+      // ── County data NOT found: manual entry ──
+      section.appendChild(el('h2', null, 'Tell Us About Your Property'));
+      if (formData.lookupDone) {
+        section.appendChild(el('div', { className: 'county-badge county-badge-info' },
+          'We couldn\'t pull county records automatically — please fill in your property details below.'));
+      }
+    }
+
+    // ── Editable fields (pre-filled when county data available) ──
     section.appendChild(el('div', { className: 'form-group' }, [
       el('label', { className: 'form-label' }, 'Property Type'),
       renderButtonGroup([
@@ -181,7 +268,7 @@
       [800, 1200, 1500, 2000, 2500, { value: 3000, label: '3000+' }],
       formData.sqft, function (v) { formData.sqft = Number(v); sqftInput.value = v; });
     section.appendChild(el('div', { className: 'form-group' }, [
-      el('label', { className: 'form-label', for: 'sqft-input' }, 'Approximate Square Footage'),
+      el('label', { className: 'form-label', for: 'sqft-input' }, 'Square Footage'),
       sqftPresets, sqftInput,
     ]));
 
@@ -269,11 +356,10 @@
     currentStep = 3;
     var section = el('div', { className: 'form-section fade-in' });
     section.appendChild(renderProgress(3));
-    section.appendChild(el('h2', null, "Rate Your Home’s Condition"));
+    section.appendChild(el('h2', null, "Rate Your Home's Condition"));
     section.appendChild(el('p', { className: 'form-hint' },
-      "Be honest — this helps us build an accurate rehab estimate. Selecting “needs work” won’t automatically lower your offer."));
+      "Be honest — this helps us build an accurate rehab estimate. Selecting “needs work” won't automatically lower your offer."));
 
-    // Overall condition (4-option cards)
     var overallGroup = el('div', { className: 'form-group' });
     overallGroup.appendChild(el('label', { className: 'form-label' }, 'Overall Condition'));
     var overallCards = el('div', { className: 'condition-cards' });
@@ -299,9 +385,8 @@
     section.appendChild(el('hr', { className: 'form-divider' }));
     section.appendChild(el('h3', { className: 'form-subhead' }, 'Component Details'));
     section.appendChild(el('p', { className: 'form-hint' },
-      "Rate each area for a more precise estimate. Skip any you’re unsure about."));
+      "Rate each area for a more precise estimate. Skip any you're unsure about."));
 
-    // Compact condition rows
     var condGrid = el('div', { className: 'cond-grid' });
     conditionDefs.forEach(function (def) {
       var row = el('div', { className: 'cond-row' });
@@ -347,10 +432,10 @@
       'Your detailed property analysis with comps, valuations, and offer options takes about 30 seconds to generate.'));
 
     var fields = [
-      { key: 'firstName', label: 'First Name', type: 'text', placeholder: 'First name', auto: 'given-name', required: true },
+      { key: 'firstName', label: 'First Name', type: 'text', placeholder: 'First name', auto: 'given-name' },
       { key: 'lastName', label: 'Last Name (optional)', type: 'text', placeholder: 'Last name', auto: 'family-name' },
-      { key: 'phone', label: 'Phone Number', type: 'tel', placeholder: '(425) 555-1234', auto: 'tel', required: true },
-      { key: 'email', label: 'Email Address', type: 'email', placeholder: 'you@email.com', auto: 'email', required: true },
+      { key: 'phone', label: 'Phone Number', type: 'tel', placeholder: '(425) 555-1234', auto: 'tel' },
+      { key: 'email', label: 'Email Address', type: 'email', placeholder: 'you@email.com', auto: 'email' },
     ];
     var inputs = {};
     fields.forEach(function (f) {
@@ -392,7 +477,6 @@
 
   /* ── Loading ────────────────────────────────────────────────── */
   var loadingMessages = [
-    'Searching county records…',
     'Finding comparable sales near your home…',
     'Verifying comp details…',
     'Ranking comps by similarity…',
@@ -468,7 +552,7 @@
     cont.innerHTML = '';
     var wrap = el('div', { className: 'error-message' });
     wrap.appendChild(el('h3', null, 'Something Went Wrong'));
-    wrap.appendChild(el('p', null, message || "We couldn’t analyze this property. Please try again or call us directly."));
+    wrap.appendChild(el('p', null, message || "We couldn't analyze this property. Please try again or call us directly."));
     var btn = el('button', { className: 'cta-button', type: 'button' }, 'Try Again');
     btn.addEventListener('click', function () { transitionTo(cont, renderStep1); });
     wrap.appendChild(btn);
@@ -482,7 +566,6 @@
     cont.innerHTML = '';
     var r = el('div', { className: 'ar' });
 
-    // ── Hero ──
     var hero = el('div', { className: 'ar-hero' });
     hero.appendChild(el('p', { className: 'ar-hero-label' }, 'Your Free Property Analysis'));
     hero.appendChild(el('h2', { className: 'ar-hero-addr' }, data.subject.address));
@@ -494,7 +577,6 @@
     hero.appendChild(chips);
     r.appendChild(hero);
 
-    // ── Valuation Cards ──
     r.appendChild(el('h3', { className: 'ar-section-title' }, 'What Your Home Is Worth'));
     var valGrid = el('div', { className: 'ar-val-grid' });
     [
@@ -513,7 +595,6 @@
     });
     r.appendChild(valGrid);
 
-    // ── Comps ──
     if (data.comps && data.comps.length) {
       r.appendChild(el('h3', { className: 'ar-section-title' },
         'Comparable Sales (' + data.comps.length + ' properties)'));
@@ -543,12 +624,10 @@
       r.appendChild(grid);
     }
 
-    // ── Rehab Estimate ──
     if (data.rehab && data.rehab.items && data.rehab.items.length) {
       r.appendChild(el('h3', { className: 'ar-section-title' }, 'Estimated Renovation Costs'));
       r.appendChild(el('p', { className: 'form-hint' },
         'Based on the condition you described. Reflects current contractor pricing in the Puget Sound area.'));
-
       var tbl = el('table', { className: 'ar-table' });
       var thead = el('thead');
       var hr = el('tr');
@@ -557,7 +636,6 @@
       hr.appendChild(el('th', { style: 'text-align:right' }, 'Est. Cost'));
       thead.appendChild(hr);
       tbl.appendChild(thead);
-
       var tbody = el('tbody');
       data.rehab.items.forEach(function (it) {
         var row = el('tr');
@@ -566,7 +644,6 @@
         row.appendChild(el('td', { style: 'text-align:right; white-space:nowrap;' }, fmt(it.cost)));
         tbody.appendChild(row);
       });
-      // Totals
       function addTotalRow(label, val, bold) {
         var row = el('tr', bold ? { className: 'ar-table-total' } : null);
         row.appendChild(el('td', { colspan: '2' }, label));
@@ -581,10 +658,8 @@
       r.appendChild(tbl);
     }
 
-    // ── Offer Paths ──
     r.appendChild(el('h3', { className: 'ar-section-title' }, 'Your Options'));
 
-    // Path A: Cash
     var pathA = el('div', { className: 'ar-path ar-path--cash' });
     pathA.appendChild(el('div', { className: 'ar-path-tag' }, 'Option A'));
     pathA.appendChild(el('h4', null, 'Cash Offer'));
@@ -604,7 +679,6 @@
     pathA.appendChild(bump);
     r.appendChild(pathA);
 
-    // Path B: Sale Partnership
     if (data.salePartnership && data.salePartnership.viable) {
       var pathB = el('div', { className: 'ar-path ar-path--partner' });
       pathB.appendChild(el('div', { className: 'ar-path-tag' }, 'Option B'));
@@ -628,7 +702,6 @@
       r.appendChild(pathB);
     }
 
-    // ── CTA ──
     var cta = el('div', { className: 'results-cta' });
     cta.appendChild(el('h3', { style: 'color:var(--white); margin-bottom:12px;' }, 'Ready to Move Forward?'));
     cta.appendChild(el('p', null, 'Call or text us to discuss your options. No pressure, no obligation.'));
