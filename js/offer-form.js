@@ -9,18 +9,32 @@
   var LOOKUP_URL = 'https://www.setmate.ai/api/public/property-lookup';
   var API_KEY = 'co_eff8fa1a866766449a6d81c7f5f672e8';
   var GOOGLE_MAPS_KEY = 'AIzaSyBH6NLO93OU1ETbQXN8VUj85nIh4ceZi24';
-  var mapsLoaded = false;
+  var PLACES_URL = 'https://places.googleapis.com/v1/places:autocomplete';
 
-  function loadGoogleMaps(cb) {
-    if (mapsLoaded) { cb(); return; }
-    if (window.google && window.google.maps && window.google.maps.places) { mapsLoaded = true; cb(); return; }
-    var s = document.createElement('script');
-    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_KEY + '&libraries=places&callback=__gmapsReady';
-    s.async = true;
-    s.defer = true;
-    window.__gmapsReady = function () { mapsLoaded = true; cb(); delete window.__gmapsReady; };
-    s.onerror = function () { /* graceful fallback — manual entry still works */ };
-    document.head.appendChild(s);
+  var acDebounce = null;
+  function fetchPlaceSuggestions(query, cb) {
+    clearTimeout(acDebounce);
+    if (!query || query.length < 4) { cb([]); return; }
+    acDebounce = setTimeout(function () {
+      fetch(PLACES_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': GOOGLE_MAPS_KEY },
+        body: JSON.stringify({
+          input: query,
+          includedRegionCodes: ['us'],
+          includedPrimaryTypes: ['street_address', 'subpremise'],
+        }),
+      })
+        .then(function (r) { return r.ok ? r.json() : { suggestions: [] }; })
+        .then(function (data) {
+          var results = (data.suggestions || []).map(function (s) {
+            var p = s.placePrediction;
+            return p ? { text: p.text.text, main: p.structuredFormat.mainText.text, secondary: p.structuredFormat.secondaryText.text } : null;
+          }).filter(Boolean);
+          cb(results);
+        })
+        .catch(function () { cb([]); });
+    }, 250);
   }
 
   var host = window.location.hostname.replace(/^www\./, '');
@@ -155,23 +169,6 @@
   }
 
   /* ── Step 1: Address ────────────────────────────────────────── */
-  function attachAutocomplete(input, onSelect) {
-    if (!window.google || !window.google.maps || !window.google.maps.places) return;
-    var ac = new google.maps.places.Autocomplete(input, {
-      types: ['address'],
-      componentRestrictions: { country: 'us' },
-      fields: ['formatted_address'],
-    });
-    ac.addListener('place_changed', function () {
-      var place = ac.getPlace();
-      if (place && place.formatted_address) {
-        formData.address = place.formatted_address;
-        input.value = place.formatted_address;
-        if (onSelect) onSelect();
-      }
-    });
-  }
-
   function renderStep1(cont) {
     currentStep = 1;
     var section = el('div', { className: 'form-section fade-in' });
@@ -180,32 +177,84 @@
     section.appendChild(el('p', { className: 'form-hint' },
       "Start typing and select your address from the dropdown — we'll pull your property details automatically."));
 
+    var inputWrap = el('div', { style: 'position:relative;' });
     var input = el('input', {
       type: 'text', className: 'form-input form-input-lg',
       placeholder: 'Start typing your address…',
       id: 'address-input', autocomplete: 'off',
     });
     input.value = formData.address;
-    input.addEventListener('input', function () { formData.address = input.value; });
 
-    function doLookup() {
+    var dropdown = el('div', { className: 'ac-dropdown', style: 'display:none;' });
+    inputWrap.appendChild(input);
+    inputWrap.appendChild(dropdown);
+
+    var activeIdx = -1;
+
+    function selectSuggestion(text) {
+      formData.address = text;
+      input.value = text;
+      dropdown.style.display = 'none';
+      activeIdx = -1;
       var addr = formData.address.trim();
-      if (!addr || addr.length < 10) return;
-      fetchPropertyLookup(addr);
-      transitionTo(cont, renderStep2);
+      if (addr.length >= 10) {
+        fetchPropertyLookup(addr);
+        transitionTo(cont, renderStep2);
+      }
     }
 
+    function showSuggestions(results) {
+      dropdown.innerHTML = '';
+      activeIdx = -1;
+      if (!results.length) { dropdown.style.display = 'none'; return; }
+      results.forEach(function (r, i) {
+        var item = el('div', { className: 'ac-item' });
+        item.appendChild(el('span', { className: 'ac-item-main' }, r.main));
+        item.appendChild(el('span', { className: 'ac-item-secondary' }, r.secondary));
+        item.addEventListener('mousedown', function (e) {
+          e.preventDefault();
+          selectSuggestion(r.text);
+        });
+        dropdown.appendChild(item);
+      });
+      dropdown.style.display = 'block';
+    }
+
+    input.addEventListener('input', function () {
+      formData.address = input.value;
+      fetchPlaceSuggestions(input.value, showSuggestions);
+    });
+
     input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        var pacContainer = document.querySelector('.pac-container');
-        var isVisible = pacContainer && pacContainer.style.display !== 'none'
-          && pacContainer.querySelectorAll('.pac-item').length > 0;
-        if (!isVisible) section.querySelector('.cta-button').click();
+      var items = dropdown.querySelectorAll('.ac-item');
+      if (e.key === 'ArrowDown' && items.length) {
+        e.preventDefault();
+        activeIdx = Math.min(activeIdx + 1, items.length - 1);
+        items.forEach(function (it, i) { it.classList.toggle('ac-active', i === activeIdx); });
+      } else if (e.key === 'ArrowUp' && items.length) {
+        e.preventDefault();
+        activeIdx = Math.max(activeIdx - 1, 0);
+        items.forEach(function (it, i) { it.classList.toggle('ac-active', i === activeIdx); });
+      } else if (e.key === 'Enter') {
+        if (activeIdx >= 0 && items[activeIdx]) {
+          e.preventDefault();
+          items[activeIdx].dispatchEvent(new Event('mousedown'));
+        } else if (dropdown.style.display === 'none' || !items.length) {
+          section.querySelector('.cta-button').click();
+        }
+      } else if (e.key === 'Escape') {
+        dropdown.style.display = 'none';
+        activeIdx = -1;
       }
     });
+
+    input.addEventListener('blur', function () {
+      setTimeout(function () { dropdown.style.display = 'none'; }, 150);
+    });
+
     section.appendChild(el('div', { className: 'form-group' }, [
       el('label', { className: 'form-label', for: 'address-input' }, 'Property Address'),
-      input,
+      inputWrap,
     ]));
 
     var errMsg = el('p', { className: 'form-error' });
@@ -220,11 +269,7 @@
       transitionTo(cont, renderStep2);
     }, 'Look Up My Property →'));
     cont.appendChild(section);
-
     setTimeout(function () { input.focus(); }, 250);
-    loadGoogleMaps(function () {
-      attachAutocomplete(input, doLookup);
-    });
   }
 
   /* ── Step 2: Property Details (auto-fill from county) ───────── */
