@@ -181,7 +181,7 @@
     var input = el('input', {
       type: 'text', className: 'form-input form-input-lg',
       placeholder: 'Start typing your address…',
-      id: 'address-input', autocomplete: 'off',
+      id: 'prop-addr', name: 'prop-addr', autocomplete: 'one-time-code',
     });
     input.value = formData.address;
 
@@ -253,7 +253,7 @@
     });
 
     section.appendChild(el('div', { className: 'form-group' }, [
-      el('label', { className: 'form-label', for: 'address-input' }, 'Property Address'),
+      el('label', { className: 'form-label', for: 'prop-addr' }, 'Property Address'),
       inputWrap,
     ]));
 
