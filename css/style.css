@@ -2097,3 +2097,10 @@ p  { margin-bottom: 1rem; }
   .ar-path { padding: 20px 16px; }
   .cond-btn { padding: 6px 10px; font-size: 0.78rem; }
 }
+
+/* Google Places Autocomplete dropdown */
+.pac-container { z-index: 10000 !important; border-radius: 8px; margin-top: 4px; box-shadow: var(--shadow-lg); font-family: var(--font-stack); }
+.pac-item { padding: 10px 14px; cursor: pointer; font-size: 0.95rem; }
+.pac-item:hover { background: var(--light-gray); }
+.pac-icon { display: none; }
+.pac-item-query { font-weight: 600; color: var(--text-dark); }
