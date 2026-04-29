@@ -8,6 +8,20 @@
   var API_URL = 'https://www.setmate.ai/api/public/property-analysis';
   var LOOKUP_URL = 'https://www.setmate.ai/api/public/property-lookup';
   var API_KEY = 'co_eff8fa1a866766449a6d81c7f5f672e8';
+  var GOOGLE_MAPS_KEY = 'AIzaSyBH6NLO93OU1ETbQXN8VUj85nIh4ceZi24';
+  var mapsLoaded = false;
+
+  function loadGoogleMaps(cb) {
+    if (mapsLoaded) { cb(); return; }
+    if (window.google && window.google.maps && window.google.maps.places) { mapsLoaded = true; cb(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_KEY + '&libraries=places&callback=__gmapsReady';
+    s.async = true;
+    s.defer = true;
+    window.__gmapsReady = function () { mapsLoaded = true; cb(); delete window.__gmapsReady; };
+    s.onerror = function () { /* graceful fallback — manual entry still works */ };
+    document.head.appendChild(s);
+  }
 
   var host = window.location.hostname.replace(/^www\./, '');
   var brandEmail = host === 'washingtonhomes4cash.com' ? 'team@washingtonhomes4cash.com'
@@ -141,23 +155,53 @@
   }
 
   /* ── Step 1: Address ────────────────────────────────────────── */
+  function attachAutocomplete(input, onSelect) {
+    if (!window.google || !window.google.maps || !window.google.maps.places) return;
+    var ac = new google.maps.places.Autocomplete(input, {
+      types: ['address'],
+      componentRestrictions: { country: 'us' },
+      fields: ['formatted_address'],
+    });
+    ac.addListener('place_changed', function () {
+      var place = ac.getPlace();
+      if (place && place.formatted_address) {
+        formData.address = place.formatted_address;
+        input.value = place.formatted_address;
+        if (onSelect) onSelect();
+      }
+    });
+  }
+
   function renderStep1(cont) {
     currentStep = 1;
     var section = el('div', { className: 'form-section fade-in' });
     section.appendChild(renderProgress(1));
     section.appendChild(el('h2', null, 'Enter Your Property Address'));
     section.appendChild(el('p', { className: 'form-hint' },
-      "We'll pull your property details automatically — just enter your full address with city and zip."));
+      "Start typing and select your address from the dropdown — we'll pull your property details automatically."));
 
     var input = el('input', {
       type: 'text', className: 'form-input form-input-lg',
-      placeholder: 'e.g. 1234 Main St, Everett, WA 98201',
-      id: 'address-input', autocomplete: 'street-address',
+      placeholder: 'Start typing your address…',
+      id: 'address-input', autocomplete: 'off',
     });
     input.value = formData.address;
     input.addEventListener('input', function () { formData.address = input.value; });
+
+    function doLookup() {
+      var addr = formData.address.trim();
+      if (!addr || addr.length < 10) return;
+      fetchPropertyLookup(addr);
+      transitionTo(cont, renderStep2);
+    }
+
     input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') section.querySelector('.cta-button').click();
+      if (e.key === 'Enter') {
+        var pacContainer = document.querySelector('.pac-container');
+        var isVisible = pacContainer && pacContainer.style.display !== 'none'
+          && pacContainer.querySelectorAll('.pac-item').length > 0;
+        if (!isVisible) section.querySelector('.cta-button').click();
+      }
     });
     section.appendChild(el('div', { className: 'form-group' }, [
       el('label', { className: 'form-label', for: 'address-input' }, 'Property Address'),
@@ -168,7 +212,7 @@
     section.appendChild(errMsg);
     section.appendChild(renderNav(null, function () {
       var addr = formData.address.trim();
-      if (!addr || addr.length < 10) { errMsg.textContent = 'Please enter a full street address including city and state.'; return; }
+      if (!addr || addr.length < 10) { errMsg.textContent = 'Please enter a full street address.'; return; }
       var hasZip = /\d{5}/.test(addr);
       var hasCity = /,/.test(addr);
       if (!hasZip && !hasCity) { errMsg.textContent = 'Please include the city and state (or zip code) so we can find your property.'; return; }
@@ -176,7 +220,11 @@
       transitionTo(cont, renderStep2);
     }, 'Look Up My Property →'));
     cont.appendChild(section);
+
     setTimeout(function () { input.focus(); }, 250);
+    loadGoogleMaps(function () {
+      attachAutocomplete(input, doLookup);
+    });
   }
 
   /* ── Step 2: Property Details (auto-fill from county) ───────── */
