@@ -705,7 +705,11 @@
           : c.conditionTag === 'as-is' ? 'ar-badge--amber' : 'ar-badge--blue';
         var body = el('div', { className: 'comp-card__body' });
         body.appendChild(el('div', { className: 'comp-card__price' }, fmt(c.soldPrice)));
-        body.appendChild(el('div', { className: 'comp-card__address' }, c.address));
+        if (c.sourceUrl) {
+          body.appendChild(el('a', { href: c.sourceUrl, target: '_blank', rel: 'noopener noreferrer', className: 'comp-card__address', style: 'display:block; color:var(--navy); text-decoration:underline;' }, c.address));
+        } else {
+          body.appendChild(el('div', { className: 'comp-card__address' }, c.address));
+        }
         var dets = el('div', { className: 'comp-card__details' });
         dets.appendChild(el('span', null, c.beds + 'bd / ' + c.baths + 'ba'));
         dets.appendChild(el('span', null, (c.sqft || 0).toLocaleString() + ' sqft'));
@@ -720,10 +724,13 @@
       r.appendChild(grid);
     }
 
-    if (data.rehab && data.rehab.items && data.rehab.items.length) {
-      r.appendChild(el('h3', { className: 'ar-section-title' }, 'Estimated Renovation Costs'));
+    var isExcellent = data.condition === 'excellent';
+    if (data.rehab && data.rehab.items && data.rehab.items.length && data.rehab.total > 2500) {
+      r.appendChild(el('h3', { className: 'ar-section-title' },
+        isExcellent ? 'Preparation Costs' : 'Estimated Renovation Costs'));
       r.appendChild(el('p', { className: 'form-hint' },
-        'Based on the condition you described. Reflects current contractor pricing in the Puget Sound area.'));
+        isExcellent ? 'Minimal prep to present your home at its best.'
+          : 'Based on the condition you described. Reflects current contractor pricing in the Puget Sound area.'));
       var tbl = el('table', { className: 'ar-table' });
       var thead = el('thead');
       var hr = el('tr');
@@ -747,17 +754,19 @@
         tbody.appendChild(row);
       }
       addTotalRow('Subtotal', data.rehab.subtotal, false);
-      addTotalRow('Contingency (12%)', data.rehab.contingency, false);
-      addTotalRow('GC Overhead (10%)', data.rehab.gcOverhead, false);
+      if (data.rehab.contingency) addTotalRow('Contingency (12%)', data.rehab.contingency, false);
+      if (data.rehab.gcOverhead) addTotalRow('GC Overhead (10%)', data.rehab.gcOverhead, false);
       addTotalRow('Total Estimated Rehab', data.rehab.total, true);
       tbl.appendChild(tbody);
       r.appendChild(tbl);
     }
 
     r.appendChild(el('h3', { className: 'ar-section-title' }, 'Your Options'));
+    var optLetter = 65;
 
+    // Option A: Cash Offer (always)
     var pathA = el('div', { className: 'ar-path ar-path--cash' });
-    pathA.appendChild(el('div', { className: 'ar-path-tag' }, 'Option A'));
+    pathA.appendChild(el('div', { className: 'ar-path-tag' }, 'Option ' + String.fromCharCode(optLetter++)));
     pathA.appendChild(el('h4', null, 'Cash Offer'));
     pathA.appendChild(el('div', { className: 'ar-path-amount' }, fmt(data.cashOffer.amount)));
     var cashUl = el('ul', { className: 'ar-path-list' });
@@ -775,12 +784,56 @@
     pathA.appendChild(bump);
     r.appendChild(pathA);
 
+    // Seller Financing (always)
+    if (data.sellerFinancing) {
+      var pathSF = el('div', { className: 'ar-path ar-path--finance' });
+      pathSF.appendChild(el('div', { className: 'ar-path-tag' }, 'Option ' + String.fromCharCode(optLetter++)));
+      pathSF.appendChild(el('h4', null, 'Seller Financing'));
+      pathSF.appendChild(el('div', { className: 'ar-path-amount' }, fmt(data.sellerFinancing.purchasePrice)));
+      pathSF.appendChild(el('p', { className: 'ar-path-desc' },
+        'Higher purchase price with flexible terms. You receive a ' + fmt(data.sellerFinancing.downPayment) +
+        ' down payment at closing, then ' + fmt(data.sellerFinancing.monthlyPayment) + '/mo for 30 years.'));
+      var sfUl = el('ul', { className: 'ar-path-list' });
+      [
+        'Purchase price: ' + fmt(data.sellerFinancing.purchasePrice),
+        'Down payment: ' + fmt(data.sellerFinancing.downPayment),
+        'Monthly payment: ' + fmt(data.sellerFinancing.monthlyPayment) + '/mo',
+        '30-year term',
+        fmt(data.sellerFinancing.earnest) + ' earnest money deposit',
+        data.sellerFinancing.inspectionDays + '-day inspection period',
+      ].forEach(function (t) { sfUl.appendChild(el('li', null, t)); });
+      pathSF.appendChild(sfUl);
+      r.appendChild(pathSF);
+    }
+
+    // Listing (excellent/good only — backend sends null for fair/poor)
+    if (data.listing) {
+      var pathList = el('div', { className: 'ar-path ar-path--listing' });
+      pathList.appendChild(el('div', { className: 'ar-path-tag' }, 'Option ' + String.fromCharCode(optLetter++)));
+      pathList.appendChild(el('h4', null, 'List With Us'));
+      pathList.appendChild(el('div', { className: 'ar-path-amount' }, fmt(data.listing.netToSeller) + ' est. net'));
+      pathList.appendChild(el('p', { className: 'ar-path-desc' },
+        'Your home is in great shape. We list it at ' + fmt(data.listing.listPrice) +
+        ' with just a ' + data.listing.commissionPct + '% commission — well below the typical 5–6%.'));
+      var listUl = el('ul', { className: 'ar-path-list' });
+      [
+        'List price: ' + fmt(data.listing.listPrice),
+        'Commission: ' + data.listing.commissionPct + '% (' + fmt(data.listing.commissionAmount) + ')',
+        'Estimated net to you: ' + fmt(data.listing.netToSeller),
+        'Timeline: ' + data.listing.timeline,
+        'Full MLS listing with professional marketing',
+      ].forEach(function (t) { listUl.appendChild(el('li', null, t)); });
+      pathList.appendChild(listUl);
+      r.appendChild(pathList);
+    }
+
+    // Novation / Sale Partnership (fair/poor only — backend sets viable:false for excellent/good)
     if (data.salePartnership && data.salePartnership.viable) {
-      var pathB = el('div', { className: 'ar-path ar-path--partner' });
-      pathB.appendChild(el('div', { className: 'ar-path-tag' }, 'Option B'));
-      pathB.appendChild(el('h4', null, 'Sale Partnership'));
-      pathB.appendChild(el('div', { className: 'ar-path-amount' }, fmt(data.salePartnership.guaranteed) + '+'));
-      pathB.appendChild(el('p', { className: 'ar-path-desc' },
+      var pathNov = el('div', { className: 'ar-path ar-path--partner' });
+      pathNov.appendChild(el('div', { className: 'ar-path-tag' }, 'Option ' + String.fromCharCode(optLetter++)));
+      pathNov.appendChild(el('h4', null, 'Sale Partnership'));
+      pathNov.appendChild(el('div', { className: 'ar-path-amount' }, fmt(data.salePartnership.guaranteed) + '+'));
+      pathNov.appendChild(el('p', { className: 'ar-path-desc' },
         'We invest up to ' + fmt(data.salePartnership.renovationBudget) +
         ' to renovate your home, list it at ~' + fmt(data.salePartnership.listPrice) +
         ', and split the upside. You get a guaranteed minimum of ' +
@@ -794,15 +847,15 @@
         'We handle all renovation, staging, and sale',
         'No out-of-pocket cost to you',
       ].forEach(function (t) { partUl.appendChild(el('li', null, t)); });
-      pathB.appendChild(partUl);
-      r.appendChild(pathB);
+      pathNov.appendChild(partUl);
+      r.appendChild(pathNov);
     }
 
     var cta = el('div', { className: 'results-cta' });
     cta.appendChild(el('h3', { style: 'color:var(--white); margin-bottom:12px;' }, 'Ready to Move Forward?'));
     cta.appendChild(el('p', null, 'Call or text us to discuss your options. No pressure, no obligation.'));
     var btns = el('div', { style: 'display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:16px;' });
-    btns.appendChild(el('a', { href: 'tel:4252865639', className: 'cta-button' }, 'Call (425) 286-5639'));
+    btns.appendChild(el('a', { href: 'tel:4252865639', className: 'cta-button', style: 'color:var(--navy);' }, 'Call (425) 286-5639'));
     btns.appendChild(el('a', { href: 'mailto:' + brandEmail,
       className: 'cta-button cta-button--outline', style: 'color:var(--gold); border-color:var(--gold);' }, 'Send Email'));
     cta.appendChild(btns);

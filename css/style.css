@@ -1226,6 +1226,9 @@ p  { margin-bottom: 1rem; }
 .results-cta a {
   color: var(--gold);
 }
+.results-cta .cta-button {
+  color: var(--navy);
+}
 
 /* PDF download button */
 .btn-download {
@@ -1958,6 +1961,8 @@ p  { margin-bottom: 1rem; }
 }
 
 .ar-path--cash { border-color: var(--gold); }
+.ar-path--finance { border-color: #10b981; }
+.ar-path--listing { border-color: #8b5cf6; }
 .ar-path--partner { border-color: #3b82f6; }
 
 .ar-path-tag {
