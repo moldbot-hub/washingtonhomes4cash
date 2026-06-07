@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
 Sitemap: https://washingtonhomes4cash.com/sitemap.xml
