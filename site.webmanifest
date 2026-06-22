@@ -1,0 +1,17 @@
+{
+  "name": "Washington Homes 4 Cash",
+  "short_name": "WA Homes 4 Cash",
+  "description": "We buy houses for cash in Washington State — any condition, no repairs, no fees.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1f5147",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
