@@ -100,6 +100,9 @@ p{margin-bottom:1rem}
 .card__by{display:block;margin-top:14px;font-family:var(--sans);font-weight:700;color:var(--accent-hover);font-size:.9rem}
 .card__stars{color:var(--accent);letter-spacing:2px;margin-bottom:10px}
 
+/* Why-sell callout */
+.why-sell__list{max-width:480px;margin:0 auto}
+
 /* Steps */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
 .steps--lg .step{padding:34px}
