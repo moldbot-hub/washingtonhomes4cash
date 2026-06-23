@@ -64,6 +64,7 @@ p{margin-bottom:1rem}
 .hero--solo .hero__actions,.hero--solo .hero h1,.hero--solo .hero__sub{margin-left:auto;margin-right:auto}
 .hero__copy .eyebrow{color:#ffd9a8}
 .hero h1{color:#fff;margin-bottom:18px;max-width:16ch}
+.hero__trust{font-size:1.05rem;color:rgba(255,255,255,.85);margin-bottom:14px;font-style:italic}
 .hero__sub{font-size:1.15rem;color:rgba(255,255,255,.92);margin-bottom:26px;max-width:48ch}
 .hero__actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px}
 .hero--solo .hero__actions{justify-content:center}
