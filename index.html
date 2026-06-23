@@ -109,6 +109,52 @@
       <div class="trustbar__item"><strong>Cash</strong><span>No financing fall-through</span></div>
     </div></section>
 
+  <section class="section section--tint" id="estimate-calculator">
+    <div class="container">
+      <div class="section__head">
+        <span class="eyebrow eyebrow--center">No obligation</span>
+        <h2>Estimate your cash offer</h2>
+        <p>Enter your home details below for an instant ballpark range — then request your real offer for exact numbers.</p>
+      </div>
+      <form id="calc-form" novalidate autocomplete="off">
+        <div class="calc-form">
+          <div class="calc-group calc-group--full">
+            <label class="calc-label" for="calc-address">Property Address <span>*</span></label>
+            <input class="calc-input" id="calc-address" name="calcAddress" type="text"
+              placeholder="123 Main St, Seattle, WA" autocomplete="street-address">
+            <span class="calc-error" id="calc-address-err" aria-live="polite"></span>
+          </div>
+          <div class="calc-group">
+            <label class="calc-label" for="calc-value">Estimated Market Value <span>*</span></label>
+            <input class="calc-input" id="calc-value" name="calcValue" type="number"
+              min="1" step="1000" placeholder="350000">
+            <span class="calc-error" id="calc-value-err" aria-live="polite"></span>
+          </div>
+          <div class="calc-group">
+            <label class="calc-label" for="calc-condition">Home Condition <span>*</span></label>
+            <select class="calc-input" id="calc-condition" name="calcCondition">
+              <option value="">Select condition</option>
+              <option value="excellent">Excellent</option>
+              <option value="good">Good</option>
+              <option value="needs-work">Needs Work</option>
+            </select>
+            <span class="calc-error" id="calc-condition-err" aria-live="polite"></span>
+          </div>
+          <div class="calc-group calc-group--full">
+            <button type="submit" class="btn btn--block">Calculate My Estimate</button>
+          </div>
+        </div>
+      </form>
+      <div class="calc-result" id="calc-result" aria-live="polite">
+        <p class="calc-range-label">Estimated cash-offer range for your home:</p>
+        <p class="calc-range" id="calc-range">&mdash;</p>
+        <p class="calc-range-label">Based on your entered value and condition.</p>
+        <a href="/get-offer.html" class="btn" id="calc-cta">Request My Real Offer &rarr;</a>
+        <p class="calc-disclaimer">This is an estimate only. Your actual offer depends on a full property review, comparable sales, and current market conditions. No obligation.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="section"><div class="container section__head">
     <span class="eyebrow eyebrow--center">Simple &amp; fast</span><h2>How it works</h2>
     <p>Three easy steps to a cash offer for your Washington home — no showings, no waiting on a buyer's loan.</p></div>
@@ -191,5 +237,6 @@
   </footer>
   <script src="/js/main.js" defer></script>
   <script src="/js/form.js" defer></script>
+  <script src="/js/calculator.js" defer></script>
 </body>
 </html>

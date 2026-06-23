@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculator — End-to-End Tests</title>
+  <style>
+    body{font-family:monospace;padding:24px;background:#f8f9fa}
+    h2{margin-bottom:16px}
+    pre{white-space:pre-wrap;line-height:1.8}
+    .pass{color:#27ae60}
+    .fail{color:#c0392b;font-weight:bold}
+    #summary{margin-top:16px;font-size:1.1rem;font-weight:bold}
+  </style>
+</head>
+<body>
+<h2>Calculator — end-to-end tests</h2>
+<pre id="out"></pre>
+<div id="summary"></div>
+
+<!-- DOM stubs matching calculator.js IDs -->
+<form id="calc-form" novalidate style="display:none">
+  <input  id="calc-address"   type="text">
+  <span   id="calc-address-err"></span>
+  <input  id="calc-value"     type="number">
+  <span   id="calc-value-err"></span>
+  <select id="calc-condition">
+    <option value="">Select condition</option>
+    <option value="excellent">Excellent</option>
+    <option value="good">Good</option>
+    <option value="needs-work">Needs Work</option>
+  </select>
+  <span id="calc-condition-err"></span>
+  <button type="submit">Calculate</button>
+</form>
+<div id="calc-result">
+  <p id="calc-range"></p>
+  <a href="/get-offer.html" id="calc-cta">Request My Real Offer &rarr;</a>
+</div>
+
+<script src="../js/calculator.js"></script>
+<script>
+var results = [];
+
+function assert(label, condition, extra) {
+  results.push({
+    pass: condition,
+    line: (condition ? '[PASS] ' : '[FAIL] ') + label + ((!condition && extra) ? ' | ' + extra : '')
+  });
+}
+
+function submit() {
+  document.getElementById('calc-form').dispatchEvent(
+    new Event('submit', {bubbles: true, cancelable: true})
+  );
+}
+
+function reset() {
+  document.getElementById('calc-address').value   = '';
+  document.getElementById('calc-value').value     = '';
+  document.getElementById('calc-condition').value = '';
+  document.getElementById('calc-address-err').textContent   = '';
+  document.getElementById('calc-value-err').textContent     = '';
+  document.getElementById('calc-condition-err').textContent = '';
+  ['calc-address','calc-value','calc-condition'].forEach(function(id){
+    document.getElementById(id).classList.remove('calc-input--error');
+  });
+  document.getElementById('calc-result').classList.remove('visible');
+  document.getElementById('calc-range').textContent = '';
+}
+
+// T1: Empty address → validation error
+reset();
+document.getElementById('calc-value').value     = '400000';
+document.getElementById('calc-condition').value = 'excellent';
+submit();
+assert('T1: Empty address → #calc-address-err non-empty',
+  document.getElementById('calc-address-err').textContent.length > 0);
+
+// T2: Non-numeric value → validation error
+reset();
+document.getElementById('calc-address').value   = '123 Main St';
+document.getElementById('calc-value').value     = 'abc';
+document.getElementById('calc-condition').value = 'excellent';
+submit();
+assert('T2: Non-numeric value → #calc-value-err non-empty',
+  document.getElementById('calc-value-err').textContent.length > 0);
+
+// T3: No condition selected → validation error
+reset();
+document.getElementById('calc-address').value = '123 Main St';
+document.getElementById('calc-value').value   = '400000';
+// condition stays ''
+submit();
+assert('T3: No condition → #calc-condition-err non-empty',
+  document.getElementById('calc-condition-err').textContent.length > 0);
+
+// T4: Excellent, $400,000 → low=328000, high=352000
+var r4 = window.calcCompute(400000, 'excellent');
+assert('T4: Excellent $400k → range 328000–352000',
+  r4 !== null && r4.low === 328000 && r4.high === 352000,
+  r4 ? 'got low=' + r4.low + ' high=' + r4.high : 'null');
+
+// T5: Good, $400,000 → low=300000, high=328000
+var r5 = window.calcCompute(400000, 'good');
+assert('T5: Good $400k → range 300000–328000',
+  r5 !== null && r5.low === 300000 && r5.high === 328000,
+  r5 ? 'got low=' + r5.low + ' high=' + r5.high : 'null');
+
+// T6: Needs Work, $400,000 → low=248000, high=300000
+var r6 = window.calcCompute(400000, 'needs-work');
+assert('T6: Needs Work $400k → range 248000–300000',
+  r6 !== null && r6.low === 248000 && r6.high === 300000,
+  r6 ? 'got low=' + r6.low + ' high=' + r6.high : 'null');
+
+// T7: Valid submit → result card has class "visible"
+reset();
+document.getElementById('calc-address').value   = '123 Main St, Seattle, WA';
+document.getElementById('calc-value').value     = '400000';
+document.getElementById('calc-condition').value = 'excellent';
+submit();
+assert('T7: Valid submit → #calc-result has class "visible"',
+  document.getElementById('calc-result').classList.contains('visible'));
+
+// T8: CTA button href
+assert('T8: #calc-cta href === "/get-offer.html"',
+  document.getElementById('calc-cta').getAttribute('href') === '/get-offer.html',
+  'got ' + document.getElementById('calc-cta').getAttribute('href'));
+
+// Render
+var passed = results.filter(function(r){return r.pass;}).length;
+document.getElementById('out').innerHTML = results.map(function(r){
+  return '<span class="' + (r.pass ? 'pass' : 'fail') + '">' + r.line + '</span>';
+}).join('\n');
+var sum = document.getElementById('summary');
+sum.textContent = passed + '/' + results.length + ' passed';
+sum.className = passed === results.length ? 'pass' : 'fail';
+</script>
+</body>
+</html>
