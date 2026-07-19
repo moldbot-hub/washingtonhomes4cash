@@ -20,8 +20,8 @@
       situation:v('situation')||null,message:msg,source:'washingtonhomes4cash.com'
     })}).then(function(r){return r.json();}).then(function(res){
       if(res&&res.success){form.style.display='none';success.style.display='block';success.scrollIntoView({behavior:'smooth',block:'center'});}
-      else{err((res&&res.error)||'Something went wrong. Please call us at (425) 286-5639.');reset();}
-    }).catch(function(){err('Could not submit. Please call us at (425) 286-5639.');reset();});
+      else{err((res&&res.error)||'Something went wrong. Please call us at (425) 548-1993.');reset();}
+    }).catch(function(){err('Could not submit. Please call us at (425) 548-1993.');reset();});
   });
   function err(m){status.textContent=m;status.className='form-status error';status.style.display='block';}
   function reset(){btn.disabled=false;btn.textContent='Get My Cash Offer';}
