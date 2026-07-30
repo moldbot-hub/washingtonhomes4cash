@@ -15,9 +15,21 @@
     if(!form.smsConsent||!form.smsConsent.checked){return err('Please agree to be contacted so we can reach you.');}
     var msg=v('message');msg=(msg?msg+' | ':'')+'Consented to calls/texts (SMS opt-in)';
     btn.disabled=true;btn.textContent='Sending...';
+    var attrib={};
+    try{
+      var td=(window._smTracking&&window._smTracking.getData())||{};
+      var tu=td.utm||{};
+      if(tu.source)attrib.utm_source=tu.source;
+      if(tu.medium)attrib.utm_medium=tu.medium;
+      if(tu.campaign)attrib.utm_campaign=tu.campaign;
+      if(tu.content)attrib.utm_content=tu.content;
+      if(tu.term)attrib.utm_term=tu.term;
+      if(td.landingPage)attrib.landing=td.landingPage;
+      if(td.referrer)attrib.referrer=td.referrer;
+    }catch(e){}
     fetch('https://www.setmate.ai/api/public/seller-lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       name:name,phone:phone,email:v('email')||null,propertyAddress:addr,
-      situation:v('situation')||null,message:msg,source:'washingtonhomes4cash.com'
+      situation:v('situation')||null,message:msg,source:'washingtonhomes4cash.com',attribution:attrib
     })}).then(function(r){return r.json();}).then(function(res){
       if(res&&res.success){form.style.display='none';success.style.display='block';success.scrollIntoView({behavior:'smooth',block:'center'});}
       else{err((res&&res.error)||'Something went wrong. Please call us at (425) 548-1993.');reset();}
