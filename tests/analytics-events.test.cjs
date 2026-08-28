@@ -1,7 +1,20 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const analytics = require("../js/tracking.js");
+
+test("all pages use the dedicated seller analytics property", () => {
+  const root = path.resolve(__dirname, "..");
+  const pages = fs.readdirSync(root).filter((name) => name.endsWith(".html"));
+  assert.ok(pages.length > 0);
+  for (const page of pages) {
+    const html = fs.readFileSync(path.join(root, page), "utf8");
+    assert.match(html, /G-F5N9DBL4ZW/, page);
+    assert.doesNotMatch(html, /G-22KRBSFPDX/, page);
+  }
+});
 
 function windowFixture() {
   const values = new Map();
@@ -83,4 +96,3 @@ test("serialized analytics never contain submitted or attribution fields", () =>
     assert.equal(serialized.includes(value), false);
   }
 });
-
