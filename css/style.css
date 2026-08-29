@@ -220,6 +220,20 @@ p{margin-bottom:1rem}
 .footer__legal p{color:rgba(255,255,255,.6);margin-bottom:8px}
 .footer__legal a{color:rgba(255,255,255,.8)}
 
+/* Comparison table */
+.compare-wrap{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line)}
+.compare-table{width:100%;border-collapse:collapse;min-width:520px;background:var(--white)}
+.compare-table th,.compare-table td{padding:15px 20px;text-align:left;border-bottom:1px solid var(--line)}
+.compare-table tbody tr:last-child td,.compare-table tbody tr:last-child th{border-bottom:none}
+.compare-table thead th{font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:18px 20px}
+.compare-table thead th:first-child{background:var(--tint);color:var(--muted)}
+.compare-table thead th:nth-child(2){background:var(--primary);color:#fff}
+.compare-table thead th:nth-child(3){background:var(--accent-soft);color:var(--muted)}
+.compare-table tbody th{font-weight:600;color:var(--ink);font-size:.95rem;background:var(--tint);white-space:nowrap}
+.compare-table td{font-size:.95rem}
+.compare-yes{color:#27ae60;font-weight:700}
+.compare-no{color:var(--muted)}
+
 /* Responsive */
 @media(max-width:1040px){
   .nav__toggle{display:flex}
