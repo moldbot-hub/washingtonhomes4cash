@@ -1,14 +1,3 @@
-/ https://washingtonhomesolutions.com/sell-house-fast 301
-/index.html https://washingtonhomesolutions.com/sell-house-fast 301
-/get-offer.html https://washingtonhomesolutions.com/get-offer 301
-/how-it-works.html https://washingtonhomesolutions.com/how-it-works 301
-/faq.html https://washingtonhomesolutions.com/faq 301
-/about.html https://washingtonhomesolutions.com/about 301
-/foreclosure-help.html https://washingtonhomesolutions.com/guides/selling-before-foreclosure 301
-/areas.html https://washingtonhomesolutions.com/areas 301
-/areas/* https://washingtonhomesolutions.com/areas 301
-/blog.html https://washingtonhomesolutions.com/guides 301
-/blog/* https://washingtonhomesolutions.com/guides 301
-/privacy.html https://washingtonhomesolutions.com/privacy 301
-/terms.html https://washingtonhomesolutions.com/terms 301
-/* https://washingtonhomesolutions.com/sell-house-fast 301
+/areas/bremerton                   /areas.html  301
+/blog/how-we-calculate-your-cash-offer /index.html  301
+/blog/sell-my-house-fast-washington /index.html  301
