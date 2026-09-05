@@ -1,0 +1,33 @@
+{
+  "domain": "washingtonhomes4cash.com",
+  "provider": "OpenArt",
+  "model": "gpt-image-2",
+  "quality": "high",
+  "resolution_tier": "4k",
+  "resolution_note": "OpenArt 4K locked 4:3 preset reports 2688 x 2016 pixels; actual output dimensions are preserved.",
+  "source_dimensions": {
+    "width": 2688,
+    "height": 2016
+  },
+  "history_id": "T0y0Ncs1SyNbChxKNpPZ",
+  "resource_id": "JBkDcarJXs1EQyxltNGP",
+  "generated_at": "2026-09-05T16:34:48.894122+00:00",
+  "theme": "Condition expertise / copper and evergreen",
+  "prompt": "Create a premium editorial website hero image. Art direction: Condition expertise / copper and evergreen. Subject: A solid older Northwest house with weathered cedar siding and a visible yet modest repair opportunity, copper-toned door, lush evergreen surroundings, dignified realistic materials and warm honest daylight. Outstanding material realism, sophisticated composition, natural optical perspective, carefully controlled lighting and tactile fine detail. Conceptual illustrative scene, not a named real property or completed customer project. No people, faces, readable text, numerals, logos, watermarks, street addresses, license plates, branded products or fake credentials. Horizontal landscape 4:3 composition, central crop-safe focal point with breathing room for responsive use. Avoid collage borders, excessive HDR, plastic CGI sheen and generic stock-photo staging.",
+  "kind": "AI-generated illustration",
+  "caption": "Illustrative concept; not a completed customer project.",
+  "assets": {
+    "hero-small.webp": {
+      "bytes": 110930,
+      "sha256": "58cda860e3a7ea8cfec2cbd18e668e29af29e5e672da17e1f622e44d1e0f7499"
+    },
+    "hero.webp": {
+      "bytes": 526788,
+      "sha256": "a100e1fe72ed1027e92b313bc2af515f6731a453c2cb669ab20b050b84d4430c"
+    },
+    "og.jpg": {
+      "bytes": 311342,
+      "sha256": "b6a9e3dc82d9595eaa24f8d305a9a0ed3fb11e6c5e07e480ed7a7fa5c3b845e3"
+    }
+  }
+}
